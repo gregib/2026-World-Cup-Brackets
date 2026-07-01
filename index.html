@@ -105,27 +105,57 @@
   .empty{padding:38px 16px;text-align:center;color:var(--muted)}
   .empty b{display:block;font-family:var(--disp);color:var(--ink);font-size:18px;margin-bottom:6px}
 
-  /* ---- bracket editor ---- */
+  /* ---- bracket editor (wallchart butterfly layout) ---- */
   .scroller{overflow-x:auto;padding-bottom:10px;margin-top:6px}
-  .bracket{display:grid;grid-auto-flow:column;gap:18px;min-width:max-content}
-  .col{min-width:172px;display:flex;flex-direction:column}
+  .bracket{display:grid;grid-auto-flow:column;gap:14px;min-width:max-content;align-items:stretch}
+  .col{min-width:158px;display:flex;flex-direction:column}
+  .col.side-c{min-width:172px}
   .colh{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
     margin-bottom:10px;display:flex;align-items:center;gap:7px}
+  .col.side-r .colh{justify-content:flex-end}
+  .col.side-c .colh{justify-content:center;color:var(--gold)}
   .colh .dot{width:9px;height:9px;border-radius:3px}
   .matches{display:flex;flex-direction:column;justify-content:space-around;flex:1;gap:10px}
+  .col.side-c .matches{justify-content:center;gap:12px}
+  .champbox{background:var(--panel2);border:1px solid var(--gold-dim);border-radius:10px;padding:9px 12px;text-align:center}
+  .champlbl{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
+  .champname{font-family:var(--disp);font-weight:800;font-size:15px;color:var(--ink);line-height:1.15}
+  .champname.empty{color:var(--faint);font-weight:400}
   .match{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .col.side-c .match{border-color:var(--gold-dim)}
   .mh{font-family:var(--mono);font-size:9px;color:var(--faint);padding:4px 9px 0;letter-spacing:.08em}
+  .col.side-r .mh{text-align:right}
   .team{display:flex;align-items:center;gap:8px;padding:8px 9px;cursor:pointer;border-left:3px solid transparent;
     font-size:13px;color:var(--ink);user-select:none}
+  .col.side-r .team{flex-direction:row-reverse;border-left:none;border-right:3px solid transparent;text-align:right}
   .team + .team{border-top:1px solid var(--line)}
   .team:hover{background:var(--panel2)}
   .team.win{background:rgba(47,182,124,.10);border-left-color:var(--good);font-weight:600}
+  .col.side-r .team.win{border-right-color:var(--good)}
   .team.lose{color:var(--faint);text-decoration:line-through;text-decoration-color:var(--line2)}
   .team.tbd{color:var(--faint);cursor:default;font-style:italic}
   .team.tbd:hover{background:transparent}
   .team .tier{margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--faint);border:1px solid var(--line2);
     border-radius:4px;padding:0 4px}
+  .col.side-r .team .tier{margin-left:0;margin-right:auto}
   .team.editname input{width:100%;font-size:13px;background:var(--bg2);color:var(--ink);border:1px solid var(--gold);border-radius:5px;padding:2px 5px}
+  /* compare-mode marking (viewing a player's picks) */
+  .team.pick{background:rgba(228,183,62,.10);border-left-color:var(--gold);font-weight:600}
+  .col.side-r .team.pick{border-right-color:var(--gold)}
+  .team.correct{background:rgba(47,182,124,.15);border-left-color:var(--good);font-weight:700}
+  .col.side-r .team.correct{border-right-color:var(--good)}
+  .team.wrong{background:rgba(217,83,79,.15);border-left-color:var(--bad);color:#f0b6b4;font-weight:600}
+  .col.side-r .team.wrong{border-right-color:var(--bad)}
+  .team.wrong span:first-child{text-decoration:line-through;text-decoration-color:rgba(217,83,79,.6)}
+  .team.actual{border-left-style:dashed;border-left-color:var(--good)}
+  .col.side-r .team.actual{border-left-color:transparent;border-right-style:dashed;border-right-color:var(--good)}
+  .team.dim{color:var(--faint)}
+  .rescheck{margin-left:7px;font-family:var(--mono);font-size:8.5px;padding:1px 5px;border-radius:5px;letter-spacing:.02em;white-space:nowrap}
+  .rescheck.ok{color:var(--good);border:1px solid #204034;background:rgba(47,182,124,.09)}
+  .rescheck.bad{color:#e88;border:1px solid #4a2a29;background:rgba(217,83,79,.10)}
+  .chip.penalty{color:#e88;border-color:#4a2a29;background:rgba(217,83,79,.08)}
+  .match.thirdplace{border-color:#4b4470}
+  .match.thirdplace .mh{color:#9a8fc4}
 
   /* ---- players ---- */
   .plist{display:flex;flex-direction:column;gap:8px;margin-top:14px}
@@ -174,7 +204,7 @@
   <div class="wrap">
     <span class="badge">● FIFA World Cup 26 · Knockout pool</span>
     <h1>Bracket Pool <span class="yr">’26</span></h1>
-    <p class="sub">Live standings for the 8 uploaded brackets. Results entered so far are scored automatically — tap each new winner under Results as matches finish and every score updates.</p>
+    <p class="sub">Live standings for the 9 uploaded brackets. Results entered so far are scored automatically — tap each new winner under Results as matches finish and every score updates.</p>
     <div class="legend" id="legend"></div>
   </div>
 </header>
@@ -243,7 +273,8 @@
         </div>
         <div class="wt"><label>Perfect-round points</label><input class="tx num" id="perfectPts" type="number" min="0" step="1"></div>
         <div class="wt"><label>Extra champion bonus</label><input class="tx num" id="champBonus" type="number" min="0" step="1"></div>
-        <p style="color:var(--muted);font-size:12px;margin:12px 0 0">Ties break by: correct champion → correct finalists → total correct picks → name.</p>
+        <div class="wt"><label>Penalty per blank pick</label><input class="tx num" id="blankPenalty" type="number" min="0" step="1"></div>
+        <p style="color:var(--muted);font-size:12px;margin:12px 0 0">A blank pick is any of the 32 bracket slots (incl. 3rd place &amp; champion) left unfilled — each costs this many points. Ties break by: correct champion → correct finalists → total correct picks → name.</p>
       </div>
     </div>
     <div class="row" style="margin-top:16px">
@@ -290,17 +321,17 @@ const R32_DEFAULT = JSON.parse(`[
 const REAL_PLAYERS = JSON.parse(`{
  "Amin":{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Ecuador","80":"Congo DR","81":"United States","82":"Belgium","83":"Portugal","84":"Spain","85":"Algeria","86":"Argentina","87":"Colombia","88":"Egypt","89":"France","90":"Morocco","91":"Brazil","92":"Ecuador","93":"Portugal","94":"United States","95":"Argentina","96":"Colombia","97":"France","98":"United States","99":"Brazil","100":"Argentina","101":"France","102":"Argentina","104":"France"},
  "Ashraf":{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Mexico","80":"England","81":"United States","82":"Belgium","83":"Portugal","84":"Spain","85":"Algeria","86":"Argentina","87":"Colombia","88":"Egypt","89":"France","90":"Morocco","91":"Brazil","92":"England","93":"Portugal","94":"United States","95":"Argentina","96":"Colombia","97":"France","98":"United States","99":"Brazil","100":"Argentina","101":"United States","102":"Argentina","104":"Argentina"},
- "Ibrahim A.":{"73":"Canada","74":"Paraguay","75":"Netherlands","76":"Brazil","77":"France","78":"Norway","79":"Mexico","80":"England","81":"United States","82":"Senegal","83":"Portugal","84":"Spain","85":"Switzerland","86":"Argentina","87":"Colombia","88":"Egypt","89":"France","90":"Netherlands","91":"Norway","92":"England","93":"Spain","94":"United States","95":"Argentina","96":"Colombia","97":"Netherlands","98":"Spain","99":"England","100":"Argentina","101":"Netherlands","102":"England","104":"Netherlands"},
- "Layan":{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Mexico","80":"England","81":"United States","82":"Senegal","83":"Portugal","84":"Spain","85":"Algeria","86":"Argentina","87":"Colombia","88":"Egypt","89":"France","90":"Morocco","91":"Brazil","92":"England","93":"Spain","94":"United States","95":"Argentina","96":"Colombia","97":"Morocco","98":"Spain","99":"Brazil","100":"Argentina","101":"Morocco","102":"Brazil"},
- "Niveen":{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Ecuador","80":"England","81":"United States","82":"Belgium","83":"Portugal","84":"Spain","85":"Algeria","86":"Argentina","87":"Colombia","88":"Egypt","89":"France","90":"Morocco","91":"Brazil","92":"Ecuador","93":"Portugal","94":"Belgium","95":"Argentina","96":"Colombia","97":"France","98":"Portugal","99":"Brazil","100":"Argentina","101":"France","102":"Argentina","104":"Argentina"},
- "Ahmed Awad":{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Mexico","80":"Congo DR","81":"United States","82":"Belgium","83":"Portugal","84":"Spain","85":"Switzerland","86":"Argentina","87":"Colombia","88":"Egypt","89":"France","90":"Morocco","91":"Norway","92":"Congo DR","93":"Spain","94":"United States","95":"Argentina","96":"Switzerland","97":"France","98":"Spain","99":"Norway","100":"Argentina","101":"France","102":"Norway","104":"France"},
- "Yousef":{"73":"Canada","74":"Paraguay","76":"Brazil","77":"France","78":"Ivory Coast","79":"Mexico","80":"England","81":"United States","82":"Senegal","83":"Croatia","84":"Spain","85":"Algeria","86":"Argentina","87":"Colombia","88":"Egypt","89":"France","90":"Canada","91":"Brazil","92":"Mexico","93":"Spain","94":"Senegal","95":"Argentina","96":"Colombia","97":"France","98":"Senegal","99":"Brazil","100":"Argentina","101":"France","102":"Brazil","104":"France"},
+ "Ibrahim A.":{"73":"Canada","74":"Paraguay","75":"Netherlands","76":"Brazil","77":"France","78":"Norway","79":"Mexico","80":"England","81":"United States","82":"Senegal","83":"Portugal","84":"Spain","85":"Switzerland","86":"Argentina","87":"Colombia","88":"Egypt","89":"France","90":"Netherlands","91":"Norway","92":"England","93":"Spain","94":"United States","95":"Argentina","96":"Colombia","97":"Netherlands","98":"Spain","99":"England","100":"Argentina","101":"Netherlands","102":"England","103":"Spain","104":"Netherlands"},
+ "Layan":{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Mexico","80":"England","81":"United States","82":"Senegal","83":"Portugal","84":"Spain","85":"Algeria","86":"Argentina","87":"Colombia","88":"Egypt","89":"France","90":"Morocco","91":"Brazil","92":"England","93":"Spain","94":"United States","95":"Argentina","96":"Colombia","97":"Morocco","98":"Spain","99":"Brazil","100":"Argentina","101":"Morocco","102":"Brazil","103":"Spain","104":"Morocco"},
+ "Niveen":{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Ecuador","80":"England","81":"United States","82":"Belgium","83":"Portugal","84":"Spain","85":"Algeria","86":"Argentina","87":"Colombia","88":"Egypt","89":"France","90":"Morocco","91":"Brazil","92":"Ecuador","93":"Portugal","94":"Belgium","95":"Argentina","96":"Colombia","97":"France","98":"Portugal","99":"Brazil","100":"Argentina","101":"France","102":"Argentina","103":"Brazil","104":"Argentina"},
+ "Ahmed Awad":{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Mexico","80":"Congo DR","81":"United States","82":"Belgium","83":"Portugal","84":"Spain","85":"Switzerland","86":"Argentina","87":"Colombia","88":"Egypt","89":"France","90":"Morocco","91":"Norway","92":"Congo DR","93":"Spain","94":"United States","95":"Argentina","96":"Switzerland","97":"France","98":"Spain","99":"Norway","100":"Argentina","101":"France","102":"Norway","103":"Spain","104":"France"},
+ "Yousef":{"73":"Canada","74":"Paraguay","76":"Brazil","77":"France","78":"Ivory Coast","79":"Mexico","80":"England","81":"United States","82":"Senegal","83":"Croatia","84":"Spain","85":"Algeria","86":"Argentina","87":"Colombia","88":"Egypt","89":"France","90":"Canada","91":"Brazil","92":"Mexico","93":"Spain","94":"Senegal","95":"Argentina","96":"Colombia","97":"France","98":"Senegal","99":"Brazil","100":"Argentina","101":"France","102":"Brazil","103":"Argentina","104":"France"},
  "Noor":{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Ivory Coast","79":"Mexico","80":"England","81":"United States","82":"Senegal","83":"Croatia","84":"Spain","85":"Algeria","86":"Cabo Verde","87":"Colombia","88":"Egypt","89":"France","90":"Morocco","91":"Brazil","92":"Mexico","93":"Spain","94":"Senegal","95":"Egypt","96":"Colombia","97":"France","98":"Spain","99":"Mexico","100":"Colombia","101":"Spain","102":"Mexico"},
- "Ghassan":{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Ecuador","80":"England","81":"United States","82":"Senegal","83":"Portugal","84":"Spain","85":"Algeria","86":"Argentina","87":"Colombia","88":"Australia","89":"France","90":"Morocco","91":"Brazil","92":"England","93":"Spain","94":"United States","95":"Argentina","96":"Colombia","97":"France","98":"Spain","99":"England","100":"Argentina","101":"Spain","102":"Argentina","104":"Spain"}
+ "Ghassan":{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Ecuador","80":"England","81":"United States","82":"Senegal","83":"Portugal","84":"Spain","85":"Algeria","86":"Argentina","87":"Colombia","88":"Australia","89":"France","90":"Morocco","91":"Brazil","92":"England","93":"Spain","94":"United States","95":"Argentina","96":"Colombia","97":"France","98":"Spain","99":"England","100":"Argentina","101":"Spain","102":"Argentina","103":"France","104":"Spain"}
 }`);
 
 /* Official results entered so far (winners). Add to these as matches finish. */
-const REAL_RESULTS = JSON.parse(`{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","78":"Norway"}`);
+const REAL_RESULTS = JSON.parse(`{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Mexico"}`);
 
 // each match -> its two feeder matches (winners advance here)
 const TREE = {
@@ -315,28 +346,33 @@ const ROUND_MATCHES = {
   r16:[89,90,91,92,93,94,95,96],
   qf:[97,98,99,100],
   sf:[101,102],
-  final:[104]
+  final:[104],
+  third:[103]
 };
-const ALL_MATCHES = [...ROUND_MATCHES.r32,...ROUND_MATCHES.r16,...ROUND_MATCHES.qf,...ROUND_MATCHES.sf,...ROUND_MATCHES.final];
+const ALL_MATCHES = [...ROUND_MATCHES.r32,...ROUND_MATCHES.r16,...ROUND_MATCHES.qf,...ROUND_MATCHES.sf,...ROUND_MATCHES.third,...ROUND_MATCHES.final];
+/* every pick a complete bracket should contain (used for the blank penalty) */
+const FILLABLE = [...ROUND_MATCHES.r32,...ROUND_MATCHES.r16,...ROUND_MATCHES.qf,...ROUND_MATCHES.sf,103,104];
+const PERFECT_ROUNDS = ["r32","r16","qf","sf","final"];
 const ROUNDS = [
   {k:"r32",  label:"Round of 32",   short:"R32",   col:"var(--r1)"},
   {k:"r16",  label:"Round of 16",   short:"R16",   col:"var(--r2)"},
   {k:"qf",   label:"Quarterfinals", short:"QF",    col:"var(--r3)"},
   {k:"sf",   label:"Semifinals",    short:"SF",    col:"var(--r4)"},
+  {k:"third",label:"Third place",   short:"3RD",   col:"#7d70a8"},
   {k:"final",label:"Final",         short:"FINAL", col:"var(--r5)"}
 ];
-function roundKey(m){ if(m<=88)return"r32"; if(m<=96)return"r16"; if(m<=100)return"qf"; if(m<=102)return"sf"; if(m===104)return"final"; return null; }
+function roundKey(m){ if(m<=88)return"r32"; if(m<=96)return"r16"; if(m<=100)return"qf"; if(m<=102)return"sf"; if(m===103)return"third"; if(m===104)return"final"; return null; }
 function roundCol(k){ return ROUNDS.find(r=>r.k===k).col; }
 
 /* ---------- state ---------- */
-const STORE_KEY = "wc26_bracket_pool_v3";
+const STORE_KEY = "wc26_bracket_pool_v7";
 let S = null; // {r32, weights, opts, truth, players:[{name,picks}]}
 
 function defaultState(){
   return {
     r32: structuredClone(R32_DEFAULT),
-    weights: {r32:1, r16:2, qf:4, sf:8, final:16},
-    opts: {upset:true, upsetPts:2, perfect:true, perfectPts:5, champBonus:0},
+    weights: {r32:1, r16:2, qf:4, sf:8, third:5, final:16},
+    opts: {upset:true, upsetPts:2, perfect:true, perfectPts:5, champBonus:0, blankPenalty:1},
     truth: {},
     players: []
   };
@@ -353,6 +389,11 @@ function tierOf(t){ return TIER[t] || 1; }
 /* competitors of a match within a given bracket (a {matchId:winner} map) */
 function competitors(bracket, m){
   if(m>=73 && m<=88){ const d=S.r32.find(x=>x.m===m); return [d.a, d.b]; }
+  if(m===103){ // third-place playoff = the two semifinal losers
+    const l1=competitors(bracket,101).find(t=>t && t!==bracket[101]);
+    const l2=competitors(bracket,102).find(t=>t && t!==bracket[102]);
+    return [l1||null, l2||null];
+  }
   const [x,y]=TREE[m]; return [bracket[x]||null, bracket[y]||null];
 }
 /* set a winner and prune now-invalid downstream picks */
@@ -369,7 +410,7 @@ function prune(bracket){
 /* ---------- scoring ---------- */
 function scorePlayer(picks){
   const w=S.weights, o=S.opts, t=S.truth;
-  const byRound={r32:0,r16:0,qf:0,sf:0,final:0};
+  const byRound={r32:0,r16:0,qf:0,sf:0,third:0,final:0};
   let base=0, bonus=0, correct=0, finalists=0, champ=false;
   for(const m of ALL_MATCHES){
     if(t[m]==null) continue;
@@ -385,15 +426,18 @@ function scorePlayer(picks){
     }
   }
   if(o.perfect){
-    for(const r of Object.keys(ROUND_MATCHES)){
+    for(const r of PERFECT_ROUNDS){
       const ms=ROUND_MATCHES[r];
       if(ms.every(m=>t[m]!=null) && ms.every(m=>picks[m]===t[m])) bonus+=Number(o.perfectPts)||0;
     }
   }
   if(champ) bonus+=Number(o.champBonus)||0;
-  return {total:base+bonus, base, bonus, byRound, correct, finalists, champ};
+  // blank penalty: every pick a complete bracket should contain but this one doesn't
+  const blanks=FILLABLE.filter(m=>!picks[m]).length;
+  const penalty=blanks*(Number(o.blankPenalty)||0);
+  return {total:base+bonus-penalty, base, bonus, penalty, blanks, byRound, correct, finalists, champ};
 }
-function maxBase(){ let s=0; for(const r of ROUNDS) s+=S.weights[r.k]*ROUND_MATCHES[r.k].length; return s; }
+function maxBase(){ let s=0; for(const r of ROUNDS) s+=(S.weights[r.k]||0)*ROUND_MATCHES[r.k].length; return s; }
 function decidedCount(){ return ALL_MATCHES.filter(m=>S.truth[m]!=null).length; }
 
 /* ---------- persistence ---------- */
@@ -485,6 +529,7 @@ function renderBoard(){
       const cc=el("span","chip"+(s.champ?" gold":""), (s.champ?"✓ ":"✗ ")+"champion"); chips.appendChild(cc);
     }
     if(s.bonus>0){ chips.appendChild(el("span","chip bonus","+"+s.bonus+" bonus")); }
+    if(s.penalty>0){ chips.appendChild(el("span","chip penalty","−"+s.penalty+" ("+s.blanks+" blank"+(s.blanks>1?"s":"")+")")); }
     who.appendChild(chips);
     card.appendChild(who);
     const sc=el("div","score");
@@ -507,46 +552,81 @@ function renderBoard(){
 }
 
 /* bracket editor: mode 'results' edits S.truth; mode 'player' edits a player's picks */
-function renderBracketInto(container, bracket, editable, onPick){
+/* wallchart "butterfly" layout: R32 down both outer edges, converging to the Final in the middle.
+   Match order top-to-bottom mirrors the printed scan. */
+const LAYOUT=[
+  {k:"r32", side:"l", ms:[74,77,73,75,83,84,81,82]},
+  {k:"r16", side:"l", ms:[89,90,93,94]},
+  {k:"qf",  side:"l", ms:[97,98]},
+  {k:"sf",  side:"l", ms:[101]},
+  {k:"final", side:"c", ms:[104,103]},
+  {k:"sf",  side:"r", ms:[102]},
+  {k:"qf",  side:"r", ms:[99,100]},
+  {k:"r16", side:"r", ms:[91,92,95,96]},
+  {k:"r32", side:"r", ms:[76,78,79,80,86,88,85,87]}
+];
+function buildMatchCard(bracket, m, editable, onPick, compare){
+  const match=el("div","match"+(m===103?" thirdplace":""));
+  const hd=el("div","mh", m===103 ? "3rd place · Match 103" : "Match "+m);
+  match.appendChild(hd);
+  const c=competitors(bracket,m);
+  const winner=bracket[m]||null;
+  const rows=[c[0],c[1]];
+  if(m===103 && winner && !rows.includes(winner)) rows.push(winner); // off-bracket 3rd-place pick
+  const played = compare && S.truth[m]!=null;
+  const actual = played ? S.truth[m] : null;
+  if(played){
+    const ok = winner && winner===actual;
+    hd.appendChild(el("span","rescheck "+(ok?"ok":"bad"), ok ? "✓ correct" : (winner ? "✗ "+actual+" won" : "✗ no pick")));
+  }
+  rows.forEach((team,idx)=>{
+    if(!team){ match.appendChild(el("div","team tbd", m===103?"awaiting semifinals":"To be decided")); return; }
+    const row=el("div","team");
+    const isPick = winner!=null && team===winner;
+    if(compare){
+      if(played){
+        if(isPick) row.classList.add(team===actual?"correct":"wrong");
+        else if(team===actual) row.classList.add("actual");
+        else row.classList.add("dim");
+      }else if(isPick){ row.classList.add("pick"); }
+    }else{
+      if(winner!=null && isPick) row.classList.add("win");
+      if(winner!=null && !isPick) row.classList.add("lose");
+    }
+    if(editTeams && m>=73 && m<=88 && editable){
+      row.classList.add("editname");
+      const inp=el("input"); inp.value=team;
+      inp.addEventListener("change",()=>{ renameTeam(m, idx, inp.value.trim()||team); });
+      inp.addEventListener("click",e=>e.stopPropagation());
+      row.appendChild(inp);
+    }else{
+      row.appendChild(el("span",null,team));
+      const tg=el("span","tier", tierOf(team)===1?"W":tierOf(team)===2?"RU":"3rd");
+      row.appendChild(tg);
+      if(editable){ row.addEventListener("click",()=>onPick(m,team)); }
+    }
+    match.appendChild(row);
+  });
+  return match;
+}
+function renderBracketInto(container, bracket, editable, onPick, compare){
   container.innerHTML="";
-  for(const r of ROUNDS){
-    const col=el("div","col");
+  for(const colDef of LAYOUT){
+    const r=ROUNDS.find(x=>x.k===colDef.k);
+    const col=el("div","col side-"+colDef.side);
     const h=el("div","colh");
     const dot=el("span","dot"); dot.style.background=r.col; h.appendChild(dot);
     h.appendChild(document.createTextNode(r.label));
     col.appendChild(h);
     const ms=el("div","matches");
-    for(const m of ROUND_MATCHES[r.k]){
-      const match=el("div","match");
-      match.appendChild(el("div","mh","Match "+m));
-      const c=competitors(bracket,m);
-      const winner=bracket[m]||null;
-      [c[0],c[1]].forEach((team,idx)=>{
-        if(!team){
-          const row=el("div","team tbd","To be decided");
-          match.appendChild(row); return;
-        }
-        const row=el("div","team");
-        const decided = winner!=null;
-        if(decided && team===winner) row.classList.add("win");
-        if(decided && team!==winner) row.classList.add("lose");
-        // editable R32 team names when editTeams on (results mode only)
-        if(editTeams && m>=73 && m<=88 && editable){
-          row.classList.add("editname");
-          const inp=el("input"); inp.value=team;
-          inp.addEventListener("change",()=>{ renameTeam(m, idx, inp.value.trim()||team); });
-          inp.addEventListener("click",e=>e.stopPropagation());
-          row.appendChild(inp);
-        }else{
-          row.appendChild(el("span",null,team));
-          const tg=el("span","tier", tierOf(team)===1?"W":tierOf(team)===2?"RU":"3rd");
-          row.appendChild(tg);
-          if(editable){ row.addEventListener("click",()=>onPick(m,team)); }
-        }
-        match.appendChild(row);
-      });
-      ms.appendChild(match);
+    if(colDef.side==="c"){
+      const champ=bracket[104]||null;
+      const cbox=el("div","champbox");
+      cbox.appendChild(el("div","champlbl","🏆 Champion"));
+      cbox.appendChild(el("div","champname"+(champ?"":" empty"), champ||"— not filled —"));
+      ms.appendChild(cbox);
     }
+    for(const m of colDef.ms){ ms.appendChild(buildMatchCard(bracket,m,editable,onPick,compare)); }
     col.appendChild(ms);
     container.appendChild(col);
   }
@@ -566,7 +646,7 @@ function renderResults(){
     if(S.truth[m]===team){ delete S.truth[m]; prune(S.truth); } // tap winner again to undo
     else setWinner(S.truth, m, team);
     save(); renderResults(); renderBoard();
-  });
+  }, false);
 }
 
 function renderPlayers(){
@@ -588,9 +668,9 @@ function renderPlayers(){
     const onPick=(m,team)=>{
       if(p.picks[m]===team){ delete p.picks[m]; prune(p.picks); }
       else setWinner(p.picks, m, team);
-      save(); renderBracketInto(bk, p.picks, true, onPick); renderBoard();
+      save(); renderBracketInto(bk, p.picks, true, onPick, true); renderBoard();
     };
-    renderBracketInto(bk, p.picks, true, onPick);
+    renderBracketInto(bk, p.picks, true, onPick, true);
     return;
   }
   if(S.players.length===0){
@@ -626,7 +706,7 @@ function renderRules(){
   }
   setToggle("tgUpset", S.opts.upset, v=>{S.opts.upset=v;save();renderBoard();});
   setToggle("tgPerfect", S.opts.perfect, v=>{S.opts.perfect=v;save();renderBoard();});
-  bindNum("upsetPts","upsetPts"); bindNum("perfectPts","perfectPts"); bindNum("champBonus","champBonus");
+  bindNum("upsetPts","upsetPts"); bindNum("perfectPts","perfectPts"); bindNum("champBonus","champBonus"); bindNum("blankPenalty","blankPenalty");
 }
 function setToggle(id,val,cb){
   const t=document.getElementById(id); t.classList.toggle("on",val);
@@ -673,8 +753,8 @@ document.getElementById("loadJson").onclick=()=>{
   if(!ok || !S || !S.r32){ loadDemo(); }
   rebuildTiers();
   // backfill any missing fields
-  S.weights=Object.assign({r32:1,r16:2,qf:4,sf:8,final:16},S.weights);
-  S.opts=Object.assign({upset:true,upsetPts:2,perfect:true,perfectPts:5,champBonus:0},S.opts);
+  S.weights=Object.assign({r32:1,r16:2,qf:4,sf:8,third:5,final:16},S.weights);
+  S.opts=Object.assign({upset:true,upsetPts:2,perfect:true,perfectPts:5,champBonus:0,blankPenalty:1},S.opts);
   renderAll();
 })();
 </script>
