@@ -332,7 +332,7 @@ const REAL_PLAYERS = JSON.parse(`{
 }`);
 
 /* Official results entered so far (winners). Add to these as matches finish. */
-const REAL_RESULTS = JSON.parse(`{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Mexico","80":"England"}`);
+const REAL_RESULTS = JSON.parse(`{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Mexico","80":"England","82":"Belgium","81":"United States","83":"Portugal","84":"Spain","85":"Switzerland"}`);
 
 // each match -> its two feeder matches (winners advance here)
 const TREE = {
@@ -366,7 +366,7 @@ function roundKey(m){ if(m<=88)return"r32"; if(m<=96)return"r16"; if(m<=100)retu
 function roundCol(k){ return ROUNDS.find(r=>r.k===k).col; }
 
 /* ---------- state ---------- */
-const STORE_KEY = "wc26_bracket_pool_v9";
+const STORE_KEY = "wc26_bracket_pool_v12";
 let S = null; // {r32, weights, opts, truth, players:[{name,picks}]}
 
 function defaultState(){
