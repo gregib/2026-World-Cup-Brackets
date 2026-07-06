@@ -51,6 +51,22 @@
   .lg .sw{width:11px;height:11px;border-radius:3px}
   .lg b{font-family:var(--mono);font-size:12px}
   .lg .pts{color:var(--muted)}
+  .lg.extra{border-style:dashed}
+  .lg.extra b{color:var(--muted)}
+  .lg.mulligan{border-color:#4a3f22}
+  .lg.mulligan .pts{color:var(--gold)}
+
+  /* ---- ruleset toggle ---- */
+  .rsToggle{display:flex;gap:0;margin-top:16px;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;padding:4px;width:fit-content}
+  .rsBtn{font-family:var(--body);font-weight:600;font-size:13px;color:var(--muted);background:transparent;
+    border:none;border-radius:9px;padding:8px 16px;cursor:pointer}
+  .rsBtn.active{background:var(--gold);color:#1a1610}
+  .rsNote{font-size:12px;color:var(--muted);margin:8px 0 0}
+  .banner{background:#241a10;border:1px solid #4a3420;color:#e0ab6a;font-size:12.5px;border-radius:10px;
+    padding:10px 14px;margin-bottom:16px}
+  .chip.mulligan{color:#8ec4e8;border-color:#2a3f4a;background:rgba(58,107,138,.1)}
+  .sw-toggle.disabled, input.tx.num:disabled{opacity:.45;cursor:not-allowed}
 
   /* ---- nav ---- */
   nav.tabs{display:flex;gap:6px;margin:22px 0 4px;flex-wrap:wrap}
@@ -206,6 +222,11 @@
     <h1>Bracket Pool <span class="yr">’26</span></h1>
     <p class="sub">Live standings for the 10 uploaded brackets. Results entered so far are scored automatically — tap each new winner under Results as matches finish and every score updates.</p>
     <div class="legend" id="legend"></div>
+    <div class="rsToggle" id="rsToggle">
+      <button class="rsBtn" data-rs="current">Classical</button>
+      <button class="rsBtn" data-rs="scenarioC">Mulligan</button>
+    </div>
+    <p class="rsNote" id="rsNote"></p>
   </div>
 </header>
 
@@ -255,6 +276,7 @@
     <div class="vhead">
       <div><h2>Scoring rules</h2><p>Tune the model for your pool. Everything recalculates instantly. Defaults give each round an equal maximum of 16, so the champion call matters as much as the whole first round.</p></div>
     </div>
+    <div class="banner" id="rulesBanner" style="display:none">⚑ Mulligan Rules is a fixed side-exercise ruleset — these fields are read-only. Switch to Classical to edit.</div>
     <div class="grid2">
       <div class="card ctl">
         <h3>Points per correct pick</h3>
@@ -332,7 +354,7 @@ const REAL_PLAYERS = JSON.parse(`{
 }`);
 
 /* Official results entered so far (winners). Add to these as matches finish. */
-const REAL_RESULTS = JSON.parse(`{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Mexico","80":"England","82":"Belgium","81":"United States","83":"Portugal","84":"Spain","85":"Switzerland","88":"Egypt","86":"Argentina","87":"Colombia"}`);
+const REAL_RESULTS = JSON.parse(`{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Mexico","80":"England","82":"Belgium","81":"United States","83":"Portugal","84":"Spain","85":"Switzerland","88":"Egypt","86":"Argentina","87":"Colombia","90":"Morocco","89":"France","91":"Norway","92":"England"}`);
 
 // each match -> its two feeder matches (winners advance here)
 const TREE = {
@@ -366,16 +388,55 @@ function roundKey(m){ if(m<=88)return"r32"; if(m<=96)return"r16"; if(m<=100)retu
 function roundCol(k){ return ROUNDS.find(r=>r.k===k).col; }
 
 /* ---------- state ---------- */
-const STORE_KEY = "wc26_bracket_pool_v14";
-let S = null; // {r32, weights, opts, truth, players:[{name,picks}]}
+const STORE_KEY = "wc26_bracket_pool_v20";
+let S = null; // {r32, weights, opts, truth, players:[{name,picks}], activeRuleset}
+
+/* Mulligan Rules: every round counts at full weight (nothing is zeroed). Two forgiveness
+   mechanics instead: (1) cascade protection — once a player's pick is provably dead
+   (the named team has already been eliminated), any LATER slot that repeats that same
+   dead team is excluded from being charged again, so one bad early guess doesn't get
+   punished at every subsequent round; (2) a modest mulligan — each player's worst 2
+   Round-of-32 misses are forgiven (credited at R32 weight only, no bonus attached).
+   The perfect-round bonus only ever fires on genuine full correctness, never forgiveness. */
+const SCENARIO_C = {
+  label: "Mulligan Rules",
+  blurb: "Every round counts full weight · cascade-protection on dead picks · forgive worst 2 R32 misses",
+  weights: {r32:1, r16:2, qf:4, sf:8, third:5, final:16},
+  opts: {upset:true, upsetPts:2, perfect:true, perfectPts:5, champBonus:0, blankPenalty:1, mulliganR32:2, cascadeProtect:true}
+};
+function activeWeights(){ return S.activeRuleset==="scenarioC" ? SCENARIO_C.weights : S.weights; }
+function activeOpts(){ return S.activeRuleset==="scenarioC" ? SCENARIO_C.opts : S.opts; }
+
+/* Find slots where a player's pick names a team that's already provably eliminated,
+   walking the bracket in dependency order. The FIRST time a given team goes dead is the
+   "root" mistake (still charged as a normal miss); every LATER slot that repeats the same
+   now-dead team is a pure bookkeeping echo of that same mistake and gets forgiven. */
+const CASCADE_ORDER = [89,90,91,92,93,94,95,96,97,98,99,100,101,102,104];
+function realCompetitors(m){
+  if(m>=73 && m<=88){ const d=S.r32.find(x=>x.m===m); return [d.a, d.b]; }
+  const [x,y]=TREE[m]; return [S.truth[x]??null, S.truth[y]??null];
+}
+function findCascadeForgiven(picks){
+  const deadAt={}, forgiven=new Set();
+  for(const m of CASCADE_ORDER){
+    const pick=picks[m]; if(!pick) continue;
+    const rc=realCompetitors(m);
+    const selfDead = rc[0]!=null && rc[1]!=null && !rc.includes(pick);
+    const deps = TREE[m]||[];
+    const inheritedDead = deps.some(d => deadAt[d]===pick);
+    if(selfDead || inheritedDead){ deadAt[m]=pick; if(inheritedDead) forgiven.add(m); }
+  }
+  return forgiven;
+}
 
 function defaultState(){
   return {
     r32: structuredClone(R32_DEFAULT),
     weights: {r32:1, r16:2, qf:4, sf:8, third:5, final:16},
-    opts: {upset:true, upsetPts:2, perfect:true, perfectPts:5, champBonus:0, blankPenalty:1},
+    opts: {upset:true, upsetPts:2, perfect:true, perfectPts:5, champBonus:0, blankPenalty:1, mulliganR32:0, cascadeProtect:false},
     truth: {},
-    players: []
+    players: [],
+    activeRuleset: "current"
   };
 }
 
@@ -410,9 +471,11 @@ function prune(bracket){
 
 /* ---------- scoring ---------- */
 function scorePlayer(picks){
-  const w=S.weights, o=S.opts, t=S.truth;
+  const w=activeWeights(), o=activeOpts(), t=S.truth;
   const byRound={r32:0,r16:0,qf:0,sf:0,third:0,final:0};
   let base=0, bonus=0, correct=0, finalists=0, champ=false;
+  const cascadeForgiven = o.cascadeProtect ? findCascadeForgiven(picks) : new Set();
+  const r32Misses=[];
   for(const m of ALL_MATCHES){
     if(t[m]==null) continue;
     const r=roundKey(m);
@@ -424,8 +487,16 @@ function scorePlayer(picks){
         const c=competitors(t,m), loser=c.find(x=>x && x!==t[m]);
         if(loser && tierOf(t[m])>tierOf(loser)) bonus+=Number(o.upsetPts)||0;
       }
+    } else if(cascadeForgiven.has(m)){
+      base+=w[r]; byRound[r]+=w[r]; correct++;
+    } else if(r==="r32"){
+      r32Misses.push(m);
     }
   }
+  // mulligan: forgive up to N worst Round-of-32 misses (credited as correct for base points; no bonus is retrofitted)
+  const mulligan = Math.min(Number(o.mulliganR32)||0, r32Misses.length);
+  if(mulligan>0){ base += mulligan*w.r32; byRound.r32 += mulligan*w.r32; correct += mulligan; }
+  // perfect-round bonus only ever fires on GENUINE full correctness -- forgiveness never unlocks it
   if(o.perfect){
     for(const r of PERFECT_ROUNDS){
       const ms=ROUND_MATCHES[r];
@@ -436,9 +507,9 @@ function scorePlayer(picks){
   // blank penalty: every pick a complete bracket should contain but this one doesn't
   const blanks=FILLABLE.filter(m=>!picks[m]).length;
   const penalty=blanks*(Number(o.blankPenalty)||0);
-  return {total:base+bonus-penalty, base, bonus, penalty, blanks, byRound, correct, finalists, champ};
+  return {total:base+bonus-penalty, base, bonus, penalty, blanks, byRound, correct, finalists, champ, mulligan, cascadeForgiven: cascadeForgiven.size};
 }
-function maxBase(){ let s=0; for(const r of ROUNDS) s+=(S.weights[r.k]||0)*ROUND_MATCHES[r.k].length; return s; }
+function maxBase(){ const w=activeWeights(); let s=0; for(const r of ROUNDS) s+=(w[r.k]||0)*ROUND_MATCHES[r.k].length; return s; }
 function decidedCount(){ return ALL_MATCHES.filter(m=>S.truth[m]!=null).length; }
 
 /* ---------- persistence ---------- */
@@ -490,15 +561,47 @@ let editTeams=false;
 
 function el(tag,cls,txt){ const e=document.createElement(tag); if(cls)e.className=cls; if(txt!=null)e.textContent=txt; return e; }
 
+function renderRulesetToggle(){
+  const buttons=[...document.querySelectorAll(".rsBtn")];
+  for(const b of buttons){
+    b.classList.toggle("active", b.dataset.rs===S.activeRuleset);
+    b.onclick=()=>{
+      if(S.activeRuleset===b.dataset.rs) return;
+      S.activeRuleset=b.dataset.rs; save(); renderAll();
+    };
+  }
+  const note=document.getElementById("rsNote");
+  note.textContent = S.activeRuleset==="scenarioC"
+    ? "Side-exercise ruleset: "+SCENARIO_C.blurb+". Doesn't touch Classical data — switch back anytime."
+    : "The pool's official scoring — this is what determines the real standings.";
+}
+
 function renderLegend(){
   const wrap=document.getElementById("legend"); wrap.innerHTML="";
+  const w=activeWeights(), o=activeOpts();
   for(const r of ROUNDS){
     const d=el("div","lg");
     const sw=el("span","sw"); sw.style.background=r.col;
     d.appendChild(sw);
     d.appendChild(el("b",null,r.short));
-    d.appendChild(el("span","pts","×"+S.weights[r.k]));
+    d.appendChild(el("span","pts","×"+w[r.k]));
     wrap.appendChild(d);
+  }
+  const up=el("div","lg extra");
+  up.appendChild(el("b",null,"UPSET"));
+  up.appendChild(el("span","pts", o.upset===false? "off" : "+"+o.upsetPts));
+  wrap.appendChild(up);
+  if(Number(o.mulliganR32)>0){
+    const mu=el("div","lg extra mulligan");
+    mu.appendChild(el("b",null,"MULLIGAN"));
+    mu.appendChild(el("span","pts","×"+o.mulliganR32));
+    wrap.appendChild(mu);
+  }
+  if(o.cascadeProtect){
+    const cp=el("div","lg extra mulligan");
+    cp.appendChild(el("b",null,"CASCADE-PROTECT"));
+    cp.appendChild(el("span","pts","on"));
+    wrap.appendChild(cp);
   }
 }
 
@@ -531,6 +634,8 @@ function renderBoard(){
     }
     if(s.bonus>0){ chips.appendChild(el("span","chip bonus","+"+s.bonus+" bonus")); }
     if(s.penalty>0){ chips.appendChild(el("span","chip penalty","−"+s.penalty+" ("+s.blanks+" blank"+(s.blanks>1?"s":"")+")")); }
+    if(s.mulligan>0){ chips.appendChild(el("span","chip mulligan", s.mulligan+" mulligan"+(s.mulligan>1?"s":"")+" used")); }
+    if(s.cascadeForgiven>0){ chips.appendChild(el("span","chip mulligan", s.cascadeForgiven+" dead pick"+(s.cascadeForgiven>1?"s":"")+" protected")); }
     who.appendChild(chips);
     card.appendChild(who);
     const sc=el("div","score");
@@ -693,28 +798,34 @@ function renderPlayers(){
 }
 
 function renderRules(){
-  const w=document.getElementById("weights"); w.innerHTML="";
+  const isC = S.activeRuleset==="scenarioC";
+  const w=activeWeights(), o=activeOpts();
+  const banner=document.getElementById("rulesBanner");
+  if(banner) banner.style.display = isC ? "block" : "none";
+  const wEl=document.getElementById("weights"); wEl.innerHTML="";
   for(const r of ROUNDS){
     const row=el("div","wt");
     const lab=el("label");
     const sw=el("span","sw"); sw.style.background=r.col; lab.appendChild(sw);
     lab.appendChild(document.createTextNode(r.label));
     row.appendChild(lab);
-    const inp=el("input","tx num"); inp.type="number"; inp.min="0"; inp.step="1"; inp.value=S.weights[r.k];
+    const inp=el("input","tx num"); inp.type="number"; inp.min="0"; inp.step="1"; inp.value=w[r.k]; inp.disabled=isC;
     inp.addEventListener("change",()=>{ S.weights[r.k]=Math.max(0,parseInt(inp.value)||0); save(); renderLegend(); renderBoard(); });
     row.appendChild(inp);
-    w.appendChild(row);
+    wEl.appendChild(row);
   }
-  setToggle("tgUpset", S.opts.upset, v=>{S.opts.upset=v;save();renderBoard();});
-  setToggle("tgPerfect", S.opts.perfect, v=>{S.opts.perfect=v;save();renderBoard();});
-  bindNum("upsetPts","upsetPts"); bindNum("perfectPts","perfectPts"); bindNum("champBonus","champBonus"); bindNum("blankPenalty","blankPenalty");
+  setToggle("tgUpset", o.upset, v=>{S.opts.upset=v;save();renderBoard();}, isC);
+  setToggle("tgPerfect", o.perfect, v=>{S.opts.perfect=v;save();renderBoard();}, isC);
+  bindNum("upsetPts","upsetPts",o.upsetPts,isC); bindNum("perfectPts","perfectPts",o.perfectPts,isC);
+  bindNum("champBonus","champBonus",o.champBonus,isC); bindNum("blankPenalty","blankPenalty",o.blankPenalty,isC);
 }
-function setToggle(id,val,cb){
+function setToggle(id,val,cb,disabled){
   const t=document.getElementById(id); t.classList.toggle("on",val);
-  t.onclick=()=>{ const nv=!t.classList.contains("on"); t.classList.toggle("on",nv); cb(nv); };
+  t.classList.toggle("disabled", !!disabled);
+  t.onclick=()=>{ if(disabled) return; const nv=!t.classList.contains("on"); t.classList.toggle("on",nv); cb(nv); };
 }
-function bindNum(id,key){
-  const i=document.getElementById(id); i.value=S.opts[key];
+function bindNum(id,key,val,disabled){
+  const i=document.getElementById(id); i.value=val; i.disabled=!!disabled;
   i.onchange=()=>{ S.opts[key]=Math.max(0,parseInt(i.value)||0); save(); renderBoard(); };
 }
 
@@ -723,7 +834,7 @@ function ok(msg){ try{ return window.confirm(msg); }catch(e){ return true; } }
 function ask(msg,dflt){ try{ return window.prompt(msg,dflt||""); }catch(e){ return null; } }
 function note(msg){ try{ window.alert(msg); }catch(e){} }
 
-function renderAll(){ renderLegend(); renderBoard(); renderResults(); renderPlayers(); renderRules(); }
+function renderAll(){ renderRulesetToggle(); renderLegend(); renderBoard(); renderResults(); renderPlayers(); renderRules(); }
 
 /* ---------- events ---------- */
 document.getElementById("tabs").addEventListener("click",e=>{
@@ -755,7 +866,8 @@ document.getElementById("loadJson").onclick=()=>{
   rebuildTiers();
   // backfill any missing fields
   S.weights=Object.assign({r32:1,r16:2,qf:4,sf:8,third:5,final:16},S.weights);
-  S.opts=Object.assign({upset:true,upsetPts:2,perfect:true,perfectPts:5,champBonus:0,blankPenalty:1},S.opts);
+  S.opts=Object.assign({upset:true,upsetPts:2,perfect:true,perfectPts:5,champBonus:0,blankPenalty:1,mulliganR32:0,cascadeProtect:false},S.opts);
+  if(S.activeRuleset!=="current" && S.activeRuleset!=="scenarioC") S.activeRuleset="current";
   renderAll();
 })();
 </script>
