@@ -354,7 +354,7 @@ const REAL_PLAYERS = JSON.parse(`{
 }`);
 
 /* Official results entered so far (winners). Add to these as matches finish. */
-const REAL_RESULTS = JSON.parse(`{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Mexico","80":"England","82":"Belgium","81":"United States","83":"Portugal","84":"Spain","85":"Switzerland","88":"Egypt","86":"Argentina","87":"Colombia","90":"Morocco","89":"France","91":"Norway","92":"England","93":"Spain","94":"Belgium","95":"Argentina","96":"Switzerland"}`);
+const REAL_RESULTS = JSON.parse(`{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Mexico","80":"England","82":"Belgium","81":"United States","83":"Portugal","84":"Spain","85":"Switzerland","88":"Egypt","86":"Argentina","87":"Colombia","90":"Morocco","89":"France","91":"Norway","92":"England","93":"Spain","94":"Belgium","95":"Argentina","96":"Switzerland","97":"France","98":"Spain","99":"England","100":"Argentina"}`);
 
 // each match -> its two feeder matches (winners advance here)
 const TREE = {
@@ -388,7 +388,7 @@ function roundKey(m){ if(m<=88)return"r32"; if(m<=96)return"r16"; if(m<=100)retu
 function roundCol(k){ return ROUNDS.find(r=>r.k===k).col; }
 
 /* ---------- state ---------- */
-const STORE_KEY = "wc26_bracket_pool_v24";
+const STORE_KEY = "wc26_bracket_pool_v28";
 let S = null; // {r32, weights, opts, truth, players:[{name,picks}], activeRuleset}
 
 /* Mulligan Rules: every round counts at full weight (nothing is zeroed). Two forgiveness
