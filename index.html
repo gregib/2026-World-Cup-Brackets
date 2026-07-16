@@ -213,9 +213,46 @@
     .score .pt{font-size:24px}
     .who .nm{font-size:16px}
   }
+  /* ---- celebration ---- */
+  #confetti{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9999;display:none}
+  .tab-celebrate{background:linear-gradient(90deg,#c79a2b,#e4b73e);color:#1a1610;border-color:#e4b73e}
+  .tab-celebrate.active{background:linear-gradient(90deg,#e4b73e,#f2d98b)}
+  .champ-banner{position:relative;overflow:hidden;border-radius:20px;padding:38px 30px;text-align:center;
+    background:radial-gradient(120% 140% at 50% 0%, #2a2410 0%, #14120b 60%, #100e08 100%);
+    border:1px solid var(--gold-dim);margin-bottom:22px}
+  .champ-banner .crown{font-size:44px;filter:drop-shadow(0 4px 14px rgba(228,183,62,.5));animation:bob 2.4s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  .champ-banner .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.24em;color:var(--gold);margin:8px 0 4px}
+  .champ-banner .who{font-family:var(--disp);font-weight:900;font-size:46px;line-height:1;letter-spacing:-.01em;
+    background:linear-gradient(180deg,#fff,#f2d98b 60%,#e4b73e);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .champ-banner .score{font-family:var(--mono);color:var(--muted);margin-top:10px;font-size:14px}
+  .champ-banner .sub{color:var(--muted);font-size:13px;margin-top:6px}
+  .champ-banner .sparkle{position:absolute;font-size:16px;opacity:0;animation:spk 2.6s ease-in-out infinite}
+  @keyframes spk{0%,100%{opacity:0;transform:scale(.4) rotate(0)}50%{opacity:1;transform:scale(1) rotate(25deg)}}
+  .hl-head{font-family:var(--disp);font-weight:800;font-size:19px;margin:6px 0 4px}
+  .hl-sub{color:var(--muted);font-size:13px;margin-bottom:16px}
+  .hl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:12px}
+  .hl-card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:15px 16px;position:relative;overflow:hidden}
+  .hl-card.gold{border-color:var(--gold-dim);background:linear-gradient(180deg,#1a160c,#12100b)}
+  .hl-card .medal{font-size:20px;position:absolute;top:13px;right:14px;opacity:.9}
+  .hl-card .nm{font-family:var(--disp);font-weight:800;font-size:17px;margin-bottom:2px}
+  .hl-card .rk{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.08em;text-transform:uppercase;margin-bottom:9px}
+  .hl-card .badge2{display:inline-block;font-family:var(--mono);font-size:10px;color:var(--gold);
+    border:1px solid var(--gold-dim);border-radius:20px;padding:2px 9px;margin-bottom:9px}
+  .hl-card .praise{font-size:13px;line-height:1.5;color:var(--ink)}
+  .hl-card .stats{margin-top:9px;font-family:var(--mono);font-size:10.5px;color:var(--faint);
+    display:flex;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:9px}
+  .champ-banner .mu-champ{margin-top:15px;font-size:13px;color:#8ec4e8;border-top:1px solid rgba(255,255,255,.07);padding-top:12px}
+  .champ-banner .mu-champ b{color:#bfe0f5}
+  .rank-line{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+  .rank-pill{font-family:var(--mono);font-size:9.5px;letter-spacing:.03em;padding:3px 8px;border-radius:6px;border:1px solid var(--line);white-space:nowrap}
+  .rank-pill.cl{color:var(--gold);border-color:var(--gold-dim);background:rgba(228,183,62,.06)}
+  .rank-pill.mu{color:#8ec4e8;border-color:#2a3f4a;background:rgba(58,107,138,.09)}
+  .mu-quip{font-size:12px;color:var(--muted);font-style:italic;margin-top:10px;border-left:2px solid #2a3f4a;padding-left:10px;line-height:1.45}
 </style>
 </head>
 <body>
+<canvas id="confetti"></canvas>
 <header class="top">
   <div class="wrap">
     <span class="badge">● FIFA World Cup 26 · Knockout pool</span>
@@ -236,6 +273,7 @@
     <button class="tab" data-v="results">Results</button>
     <button class="tab" data-v="players">Players &amp; picks</button>
     <button class="tab" data-v="rules">Scoring rules</button>
+    <button class="tab tab-celebrate" data-v="celebrate">🏆 Celebrate</button>
   </nav>
 
   <!-- LEADERBOARD -->
@@ -312,6 +350,11 @@
     </details>
   </section>
 
+  <!-- CELEBRATE -->
+  <section class="view" data-view="celebrate">
+    <div id="celebrate"></div>
+  </section>
+
   <footer>Single-elimination, 32 teams. Bracket structure per FIFA’s published Round-of-32 schedule. Teams &amp; results are editable — update them as the tournament unfolds.</footer>
 </div>
 
@@ -354,7 +397,7 @@ const REAL_PLAYERS = JSON.parse(`{
 }`);
 
 /* Official results entered so far (winners). Add to these as matches finish. */
-const REAL_RESULTS = JSON.parse(`{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Mexico","80":"England","82":"Belgium","81":"United States","83":"Portugal","84":"Spain","85":"Switzerland","88":"Egypt","86":"Argentina","87":"Colombia","90":"Morocco","89":"France","91":"Norway","92":"England","93":"Spain","94":"Belgium","95":"Argentina","96":"Switzerland","97":"France","98":"Spain","99":"England","100":"Argentina","101":"Spain"}`);
+const REAL_RESULTS = JSON.parse(`{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Mexico","80":"England","82":"Belgium","81":"United States","83":"Portugal","84":"Spain","85":"Switzerland","88":"Egypt","86":"Argentina","87":"Colombia","90":"Morocco","89":"France","91":"Norway","92":"England","93":"Spain","94":"Belgium","95":"Argentina","96":"Switzerland","97":"France","98":"Spain","99":"England","100":"Argentina","101":"Spain","102":"Argentina"}`);
 
 // each match -> its two feeder matches (winners advance here)
 const TREE = {
@@ -388,7 +431,7 @@ function roundKey(m){ if(m<=88)return"r32"; if(m<=96)return"r16"; if(m<=100)retu
 function roundCol(k){ return ROUNDS.find(r=>r.k===k).col; }
 
 /* ---------- state ---------- */
-const STORE_KEY = "wc26_bracket_pool_v29";
+const STORE_KEY = "wc26_bracket_pool_v32";
 let S = null; // {r32, weights, opts, truth, players:[{name,picks}], activeRuleset}
 
 /* Mulligan Rules: every round counts at full weight (nothing is zeroed). Two forgiveness
@@ -834,7 +877,150 @@ function ok(msg){ try{ return window.confirm(msg); }catch(e){ return true; } }
 function ask(msg,dflt){ try{ return window.prompt(msg,dflt||""); }catch(e){ return null; } }
 function note(msg){ try{ window.alert(msg); }catch(e){} }
 
-function renderAll(){ renderRulesetToggle(); renderLegend(); renderBoard(); renderResults(); renderPlayers(); renderRules(); }
+function renderAll(){ renderRulesetToggle(); renderLegend(); renderBoard(); renderResults(); renderPlayers(); renderRules(); renderCelebrate(); }
+
+/* ---------- celebration ---------- */
+function ordinal(i){ return i===1?"1st":i===2?"2nd":i===3?"3rd":i+"th"; }
+
+/* Fact-checked, hand-written tribute for each player (every claim verified against the
+   real record). Falls back to a safe, stat-derived line for any unlisted name. */
+function assignAwards(rows, detail){
+  const T={
+    "Ghassan":{badge:"THE CLOSER",praise:"Pool champion — and no fluke. A modest 12/16 opener, then simply refused to miss when it mattered: a flawless 6/6 through the quarters and semis, both finalists called, and Spain, his pick, standing in the final. Peaked at exactly the right time."},
+    "Ahmed Awad":{badge:"WORE THE YELLOW JERSEY",praise:"Led the whole pool from the Round of 32 clean through the quarterfinals — a scorching 15/16 opener and a pool-best 6/8 in the Round of 16. One lonely Switzerland pick and France's semifinal exit finally reeled him back in."},
+    "Ashraf":{badge:"SHARPEST OPENER",praise:"The best eye in the group early — 15/16 in the Round of 32 with BOTH the Paraguay and Morocco shockers called, and Argentina reached the final as his champion. We'll politely say nothing about the one third-place box left blank."},
+    "Niveen":{badge:"TITLE STILL IN PLAY",praise:"Quietly in great shape: a tidy 14/16 opener, both upsets spotted, not a single gap on the sheet, and Argentina — her champion — booked into the final. No drama, just a clean, dangerous bracket."},
+    "Ibrahim A.":{badge:"SURVIVED HIS OWN BRACKET",praise:"Picked the Netherlands to win the whole thing… then watched them crash out in the Round of 16 — and STILL climbed the table on a solid 14/16 opener and a sharp 5/8 in the Round of 16. Imagine if his champion had shown up."},
+    "Layan":{badge:"EARLY PACESETTER",praise:"Out of the gate first — led the entire pool after opening day, with both the Paraguay and Morocco upsets called and zero blanks anywhere. Rode Morocco all the way until France ended the fairytale in the quarterfinals."},
+    "Amin":{badge:"LES BLEUS BELIEVER",praise:"A steady 13/16 start with both big upsets on the card. Hitched his title hopes to France — which looked inspired right up until Spain sent them home in the semis. The dream was real while it lasted."},
+    "Noor":{badge:"MASTER OF THE HEDGE",praise:"Called both the Paraguay and Morocco upsets — genuinely sharp — then declined to name a champion at all, leaving the title box gloriously empty. Can't be wrong about the winner if you never pick one. Respect the commitment to non-commitment."},
+    "Yousef":{badge:"THE PARAGUAY PROPHET",praise:"Saw Paraguay stunning Germany when plenty didn't — a proper giant-killing shout. The rest had its bumps and France-as-champion didn't survive the semis, but that Paraguay call earns a permanent spot on the highlight reel."},
+    "Omar":{badge:"THE MINIMALIST",praise:"A bracket of pure conviction: crowned JORDAN — who aren't in the knockout stage at all — as world champions, left 29 boxes blank, and STILL walked away having correctly called Canada and Brazil. Maximum efficiency. Never change."}
+  };
+  const award={};
+  for(const r of rows){
+    if(T[r.name]){ award[r.name]=T[r.name]; continue; }
+    // safe fallback built only from verified stats
+    const d=detail[r.name];
+    const bits=[];
+    if(d.upsets.length) bits.push(`called the ${d.upsets.join(" & ")} upset${d.upsets.length>1?"s":""}`);
+    if(d.r32>=14) bits.push(`a strong ${d.r32}/16 in the opening round`);
+    if(d.r16>=5) bits.push(`${d.r16}/8 in the Round of 16`);
+    if(d.blanks===0) bits.push(`a complete bracket with no blanks`);
+    award[r.name]={badge:"IN THE MIX", praise:(bits.length?bits.join(", ").replace(/^./,c=>c.toUpperCase())+".":"Brought a full bracket and plenty of heart all tournament.")};
+  }
+  return award;
+}
+/* rank a set of scored rows (tie = shared rank), leaving order sorted best-first */
+function rankRows(rows){
+  rows.sort((a,b)=>b.s.total-a.s.total || (b.s.champ-a.s.champ) || (b.s.finalists-a.s.finalists) || (b.s.correct-a.s.correct) || a.name.localeCompare(b.name));
+  let last=null, rank=0, shown=0;
+  for(const r of rows){ shown++; if(r.s.total!==last){ rank=shown; last=r.s.total; } r.rank=rank; }
+  return rows;
+}
+/* score+rank the whole field under a specific ruleset, independent of the active toggle */
+function boardFor(key){
+  const saved=S.activeRuleset; S.activeRuleset=key;
+  const rows=rankRows(S.players.map(p=>({name:p.name, picks:p.picks, s:scorePlayer(p.picks)})));
+  S.activeRuleset=saved;
+  return rows;
+}
+/* hand-written, verified quips about how the Mulligan ruleset treats each player */
+const MU_QUIPS={
+  "Ghassan":"Barely needs the mulligan (+2) — when you're this clean there's nothing to forgive. Tops both rulebooks anyway. 👑",
+  "Ahmed Awad":"The mulligan's cruel joke: he made so few mistakes there's almost nothing to forgive (+1), so messier brackets vault right past him. #2 → #4. No good deed goes unpunished.",
+  "Ashraf":"Holds #3 in both, but pockets a tidy +9 from forgiveness. Same seat, comfier cushion.",
+  "Niveen":"Biggest faller — slides #3 → #7. She gains +2… everyone around her gained more. Mulligan'd right past.",
+  "Ibrahim A.":"The mulligan's poster child: +14 and #5 → #2. His doomed Netherlands champion gets politely ignored round after round. This ruleset was basically built for him.",
+  "Amin":"Picks up +2 but still slips #6 → #8 — caught in the updraft of everyone else's forgiveness.",
+  "Layan":"Jumps #7 → #4 on a +10 boost — the mulligan quietly buries a couple of early stumbles. Great bounce.",
+  "Noor":"Climbs #8 → #6 (+10) — turns out a heavily-hedged bracket has loads to forgive. Mulligan-approved.",
+  "Yousef":"+14 points… to climb exactly one spot (#9 → #8). Maximum forgiveness, still in the basement. Baby steps.",
+  "Omar":"Even a mulligan can't fix 29 blank boxes and a Jordan championship. Rock bottom in both. Some legends are beyond redemption. 🫡"
+};
+function renderCelebrate(){
+  const wrap=document.getElementById("celebrate"); if(!wrap) return;
+  const CB=boardFor("current"), MB=boardFor("scenarioC");
+  const cl=Object.fromEntries(CB.map(r=>[r.name,{rank:r.rank,pts:r.s.total}]));
+  const mu=Object.fromEntries(MB.map(r=>[r.name,{rank:r.rank,pts:r.s.total}]));
+  const detail={};
+  for(const {name,picks,s} of CB){
+    const p={}; for(const k in picks) p[+k]=picks[k];
+    let r32=0,ups=[],r16=0,deep=0;
+    for(const m of ROUND_MATCHES.r32){ if(S.truth[m]!=null && p[m]===S.truth[m]){ r32++; const c=competitors(S.truth,m),l=c.find(x=>x&&x!==S.truth[m]); if(l&&tierOf(S.truth[m])>tierOf(l)) ups.push(S.truth[m]); } }
+    for(const m of ROUND_MATCHES.r16){ if(S.truth[m]!=null && p[m]===S.truth[m]) r16++; }
+    for(const m of [...ROUND_MATCHES.qf,...ROUND_MATCHES.sf]){ if(S.truth[m]!=null && p[m]===S.truth[m]) deep++; }
+    const champ=p[104]||null;
+    detail[name]={r32, upsets:ups, r16, deep, champ:champ||"—", champAlive:['Spain','Argentina'].includes(champ), blanks:s.blanks};
+  }
+  const awards=assignAwards(CB, detail);
+  const clChamp=CB[0], muChamp=MB[0];
+  const medals=["🥇","🥈","🥉"];
+  let html=`<div class="champ-banner">`;
+  const spots=[[8,18],[92,22],[16,72],[86,66],[50,10],[30,40],[70,45]];
+  spots.forEach((s,i)=>{ html+=`<span class="sparkle" style="left:${s[0]}%;top:${s[1]}%;animation-delay:${i*0.32}s">✨</span>`; });
+  html+=`<div class="crown">👑</div>
+    <div class="lbl">POOL CHAMPION · CLASSICAL RULES</div>
+    <div class="who">${clChamp.name}</div>
+    <div class="score">${clChamp.s.total} points · ${clChamp.s.correct} correct picks</div>
+    <div class="mu-champ">Mulligan Rules champion: <b>${muChamp.name}</b> — ${muChamp.name===clChamp.name?`a clean sweep of both rulebooks. Doesn't need the forgiveness, still wins it.`:`the mulligan crowns a different king.`}</div>
+  </div>`;
+  html+=`<div class="hl-head">Every bracket, every hero — Classical vs. Mulligan</div>
+    <div class="hl-sub">Where everyone lands under both rulebooks, plus what the mulligan did to (or for) them.</div>
+    <div class="hl-grid">`;
+  CB.forEach((r,i)=>{
+    const st=detail[r.name]; const aw=awards[r.name];
+    const c=cl[r.name], m=mu[r.name];
+    const quip = MU_QUIPS[r.name] || (()=>{ const dr=c.rank-m.rank, dp=m.pts-c.pts; return dr>0?`The mulligan lifts them ${dr} spot${dr>1?"s":""} (+${dp}).`:dr<0?`Gains +${dp}, but the field gains more — down ${-dr}.`:`Same rank in both (+${dp}).`; })();
+    html+=`<div class="hl-card ${i===0?'gold':''}">
+      ${i<3?`<span class="medal">${medals[i]}</span>`:''}
+      <div class="nm">${r.name}</div>
+      <div class="rank-line"><span class="rank-pill cl">CLASSICAL · #${c.rank} · ${c.pts}</span><span class="rank-pill mu">MULLIGAN · #${m.rank} · ${m.pts}</span></div>
+      <div class="badge2">${aw.badge}</div>
+      <div class="praise">${aw.praise}</div>
+      <div class="mu-quip">${quip}</div>
+      <div class="stats"><span>R32 ${st.r32}/16</span><span>R16 ${st.r16}/8</span><span>QF+SF ${st.deep}/6</span>${st.champ!=='—'?`<span>champ: ${st.champ}</span>`:''}</div>
+    </div>`;
+  });
+  html+=`</div>`;
+  wrap.innerHTML=html;
+}
+
+/* confetti engine */
+let _confettiRAF=null;
+function launchConfetti(ms){
+  const cv=document.getElementById("confetti"); if(!cv) return;
+  cv.style.display="block";
+  const ctx=cv.getContext("2d");
+  const DPR=Math.min(window.devicePixelRatio||1,2);
+  function size(){ cv.width=innerWidth*DPR; cv.height=innerHeight*DPR; }
+  size();
+  const cols=["#e4b73e","#f2d98b","#2e6bd6","#4e8cff","#2fb67c","#ffffff","#d9534f"];
+  const N=160, parts=[];
+  for(let i=0;i<N;i++){ parts.push({
+    x:Math.random()*cv.width, y:-Math.random()*cv.height*0.4,
+    r:(4+Math.random()*5)*DPR, c:cols[i%cols.length],
+    vy:(2+Math.random()*3.5)*DPR, vx:(-1.5+Math.random()*3)*DPR,
+    rot:Math.random()*6.28, vr:(-0.15+Math.random()*0.3), tilt:Math.random()*6.28 }); }
+  const t0=performance.now();
+  cancelAnimationFrame(_confettiRAF);
+  function frame(t){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    for(const p of parts){
+      p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr; p.tilt+=0.05;
+      if(p.y>cv.height+20){ p.y=-20; p.x=Math.random()*cv.width; }
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+      ctx.fillStyle=p.c; ctx.globalAlpha=0.9;
+      const w=p.r, h=p.r*0.5*Math.cos(p.tilt);
+      ctx.fillRect(-w/2,-h/2,w,Math.abs(h)+2);
+      ctx.restore();
+    }
+    if(t-t0<ms){ _confettiRAF=requestAnimationFrame(frame); }
+    else { ctx.clearRect(0,0,cv.width,cv.height); cv.style.display="none"; }
+  }
+  _confettiRAF=requestAnimationFrame(frame);
+}
+
 
 /* ---------- events ---------- */
 document.getElementById("tabs").addEventListener("click",e=>{
@@ -842,6 +1028,7 @@ document.getElementById("tabs").addEventListener("click",e=>{
   activeView=b.dataset.v;
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t===b));
   document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.dataset.view===activeView));
+  if(activeView==="celebrate"){ renderCelebrate(); launchConfetti(6000); }
 });
 document.getElementById("addPlayer").onclick=addPlayerFromInput;
 document.getElementById("newPlayer").addEventListener("keydown",e=>{ if(e.key==="Enter") addPlayerFromInput(); });
