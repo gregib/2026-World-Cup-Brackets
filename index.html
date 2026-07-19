@@ -244,6 +244,12 @@
     display:flex;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:9px}
   .champ-banner .mu-champ{margin-top:15px;font-size:13px;color:#8ec4e8;border-top:1px solid rgba(255,255,255,.07);padding-top:12px}
   .champ-banner .mu-champ b{color:#bfe0f5}
+  .champ-banner .spain-flourish{margin-top:14px;font-size:14px;color:#f2d98b}
+  .champ-banner .spain-flourish b{color:#fff}
+  .cel-outro{margin-top:22px;text-align:center;font-size:14px;line-height:1.6;color:var(--muted);
+    background:radial-gradient(120% 140% at 50% 0%, #16130b 0%, #101010 100%);
+    border:1px solid var(--gold-dim);border-radius:16px;padding:22px 26px}
+  .cel-outro b{color:var(--gold)}
   .rank-line{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
   .rank-pill{font-family:var(--mono);font-size:9.5px;letter-spacing:.03em;padding:3px 8px;border-radius:6px;border:1px solid var(--line);white-space:nowrap}
   .rank-pill.cl{color:var(--gold);border-color:var(--gold-dim);background:rgba(228,183,62,.06)}
@@ -397,7 +403,7 @@ const REAL_PLAYERS = JSON.parse(`{
 }`);
 
 /* Official results entered so far (winners). Add to these as matches finish. */
-const REAL_RESULTS = JSON.parse(`{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Mexico","80":"England","82":"Belgium","81":"United States","83":"Portugal","84":"Spain","85":"Switzerland","88":"Egypt","86":"Argentina","87":"Colombia","90":"Morocco","89":"France","91":"Norway","92":"England","93":"Spain","94":"Belgium","95":"Argentina","96":"Switzerland","97":"France","98":"Spain","99":"England","100":"Argentina","101":"Spain","102":"Argentina"}`);
+const REAL_RESULTS = JSON.parse(`{"73":"Canada","74":"Paraguay","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Mexico","80":"England","82":"Belgium","81":"United States","83":"Portugal","84":"Spain","85":"Switzerland","88":"Egypt","86":"Argentina","87":"Colombia","90":"Morocco","89":"France","91":"Norway","92":"England","93":"Spain","94":"Belgium","95":"Argentina","96":"Switzerland","97":"France","98":"Spain","99":"England","100":"Argentina","101":"Spain","102":"Argentina","104":"Spain","103":"England"}`);
 
 // each match -> its two feeder matches (winners advance here)
 const TREE = {
@@ -431,7 +437,7 @@ function roundKey(m){ if(m<=88)return"r32"; if(m<=96)return"r16"; if(m<=100)retu
 function roundCol(k){ return ROUNDS.find(r=>r.k===k).col; }
 
 /* ---------- state ---------- */
-const STORE_KEY = "wc26_bracket_pool_v32";
+const STORE_KEY = "wc26_bracket_pool_v34";
 let S = null; // {r32, weights, opts, truth, players:[{name,picks}], activeRuleset}
 
 /* Mulligan Rules: every round counts at full weight (nothing is zeroed). Two forgiveness
@@ -886,10 +892,10 @@ function ordinal(i){ return i===1?"1st":i===2?"2nd":i===3?"3rd":i+"th"; }
    real record). Falls back to a safe, stat-derived line for any unlisted name. */
 function assignAwards(rows, detail){
   const T={
-    "Ghassan":{badge:"THE CLOSER",praise:"Pool champion — and no fluke. A modest 12/16 opener, then simply refused to miss when it mattered: a flawless 6/6 through the quarters and semis, both finalists called, and Spain, his pick, standing in the final. Peaked at exactly the right time."},
+    "Ghassan":{badge:"THE CLOSER",praise:"Pool champion — and no fluke. A modest 12/16 opener, then simply refused to miss when it mattered: a flawless 6/6 through the quarters and semis, both finalists nailed, and Spain — the champion he called from the very start — lifting the trophy. Saved the best for last. 🏆"},
     "Ahmed Awad":{badge:"WORE THE YELLOW JERSEY",praise:"Led the whole pool from the Round of 32 clean through the quarterfinals — a scorching 15/16 opener and a pool-best 6/8 in the Round of 16. One lonely Switzerland pick and France's semifinal exit finally reeled him back in."},
-    "Ashraf":{badge:"SHARPEST OPENER",praise:"The best eye in the group early — 15/16 in the Round of 32 with BOTH the Paraguay and Morocco shockers called, and Argentina reached the final as his champion. We'll politely say nothing about the one third-place box left blank."},
-    "Niveen":{badge:"TITLE STILL IN PLAY",praise:"Quietly in great shape: a tidy 14/16 opener, both upsets spotted, not a single gap on the sheet, and Argentina — her champion — booked into the final. No drama, just a clean, dangerous bracket."},
+    "Ashraf":{badge:"SHARPEST OPENER",praise:"The best eye in the group early — 15/16 in the Round of 32 with BOTH the Paraguay and Morocco shockers called, and his champion Argentina went all the way to the final. Silver-medal heartbreak at the last, but what a ride. We'll politely say nothing about the one third-place box left blank. 😅"},
+    "Niveen":{badge:"CALLED THE FINALIST",praise:"Quietly excellent all month: a tidy 14/16 opener, both upsets spotted, not a single gap on the sheet, and her champion Argentina marched all the way to the final. So close to the ultimate prize — a genuinely sharp bracket start to finish. 👏"},
     "Ibrahim A.":{badge:"SURVIVED HIS OWN BRACKET",praise:"Picked the Netherlands to win the whole thing… then watched them crash out in the Round of 16 — and STILL climbed the table on a solid 14/16 opener and a sharp 5/8 in the Round of 16. Imagine if his champion had shown up."},
     "Layan":{badge:"EARLY PACESETTER",praise:"Out of the gate first — led the entire pool after opening day, with both the Paraguay and Morocco upsets called and zero blanks anywhere. Rode Morocco all the way until France ended the fairytale in the quarterfinals."},
     "Amin":{badge:"LES BLEUS BELIEVER",praise:"A steady 13/16 start with both big upsets on the card. Hitched his title hopes to France — which looked inspired right up until Spain sent them home in the semis. The dream was real while it lasted."},
@@ -927,16 +933,16 @@ function boardFor(key){
 }
 /* hand-written, verified quips about how the Mulligan ruleset treats each player */
 const MU_QUIPS={
-  "Ghassan":"Barely needs the mulligan (+2) — when you're this clean there's nothing to forgive. Tops both rulebooks anyway. 👑",
-  "Ahmed Awad":"The mulligan's cruel joke: he made so few mistakes there's almost nothing to forgive (+1), so messier brackets vault right past him. #2 → #4. No good deed goes unpunished.",
-  "Ashraf":"Holds #3 in both, but pockets a tidy +9 from forgiveness. Same seat, comfier cushion.",
-  "Niveen":"Biggest faller — slides #3 → #7. She gains +2… everyone around her gained more. Mulligan'd right past.",
-  "Ibrahim A.":"The mulligan's poster child: +14 and #5 → #2. His doomed Netherlands champion gets politely ignored round after round. This ruleset was basically built for him.",
-  "Amin":"Picks up +2 but still slips #6 → #8 — caught in the updraft of everyone else's forgiveness.",
-  "Layan":"Jumps #7 → #4 on a +10 boost — the mulligan quietly buries a couple of early stumbles. Great bounce.",
-  "Noor":"Climbs #8 → #6 (+10) — turns out a heavily-hedged bracket has loads to forgive. Mulligan-approved.",
-  "Yousef":"+14 points… to climb exactly one spot (#9 → #8). Maximum forgiveness, still in the basement. Baby steps.",
-  "Omar":"Even a mulligan can't fix 29 blank boxes and a Jordan championship. Rock bottom in both. Some legends are beyond redemption. 🫡"
+  "Ghassan":"Barely needed the mulligan (+2) — when you're this clean, there's nothing to forgive. Champion in BOTH rulebooks. Take a bow. 👑",
+  "Ahmed Awad":"The mulligan can't fix what isn't broken — just +1, because he barely put a foot wrong all tournament. 'Too consistent to rescue' is one heck of a compliment. 🎯",
+  "Ashraf":"Same proud podium spot in both rulebooks, plus a cheeky +9 for good measure. Rock-steady whichever way you score it. 🥉",
+  "Niveen":"So tidy she barely needed forgiving — the mulligan just had more to fix elsewhere. A clean bracket is its own reward. ✨",
+  "Ibrahim A.":"The mulligan's feel-good story of the year: +14 and a rocket to a clear 2nd! His brave Netherlands champion finally gets a hero's pardon. Redemption arc complete. 🚀",
+  "Amin":"A friendly little +2 nudge — every bracket deserves a second chance, and his takes it with a grin. Onward to 2030! 🙂",
+  "Layan":"What a glow-up — a big jump up the board! The mulligan absolutely loved her bold early calls. From day-one pacesetter to podium-chaser. 🌟",
+  "Noor":"The mulligan rewards the adventurous — a tidy +10 for a fearless, hedge-everything bracket. Bravery, refunded. 💫",
+  "Yousef":"A massive +14 boost — living proof that every gutsy pick pays off in the end. The comeback is real, and it's spectacular. 📈",
+  "Omar":"Even the mulligan tips its cap: 29 blanks, a Jordan championship, and STILL called Canada AND Brazil. An absolute legend of commitment to the bit. 🏅 Never change."
 };
 function renderCelebrate(){
   const wrap=document.getElementById("celebrate"); if(!wrap) return;
@@ -960,13 +966,14 @@ function renderCelebrate(){
   const spots=[[8,18],[92,22],[16,72],[86,66],[50,10],[30,40],[70,45]];
   spots.forEach((s,i)=>{ html+=`<span class="sparkle" style="left:${s[0]}%;top:${s[1]}%;animation-delay:${i*0.32}s">✨</span>`; });
   html+=`<div class="crown">👑</div>
-    <div class="lbl">POOL CHAMPION · CLASSICAL RULES</div>
+    <div class="lbl">🎉 POOL CHAMPION · CLASSICAL RULES 🎉</div>
     <div class="who">${clChamp.name}</div>
     <div class="score">${clChamp.s.total} points · ${clChamp.s.correct} correct picks</div>
-    <div class="mu-champ">Mulligan Rules champion: <b>${muChamp.name}</b> — ${muChamp.name===clChamp.name?`a clean sweep of both rulebooks. Doesn't need the forgiveness, still wins it.`:`the mulligan crowns a different king.`}</div>
+    <div class="spain-flourish">Called it from day one: 🇪🇸 <b>Spain</b> are World Champions — Ferran Torres 1–0 over Argentina in extra time.</div>
+    <div class="mu-champ">Mulligan Rules champion: <b>${muChamp.name}</b> — ${muChamp.name===clChamp.name?`a clean sweep of both rulebooks. Didn't even need the forgiveness. Take a bow. 👏`:`the mulligan crowns a different king.`}</div>
   </div>`;
-  html+=`<div class="hl-head">Every bracket, every hero — Classical vs. Mulligan</div>
-    <div class="hl-sub">Where everyone lands under both rulebooks, plus what the mulligan did to (or for) them.</div>
+  html+=`<div class="hl-head">Every bracket, every hero 🎊</div>
+    <div class="hl-sub">Ten brackets, one glorious month of football. Here's where everyone landed under both rulebooks — and a little love for every single entry. Nobody goes home empty-handed.</div>
     <div class="hl-grid">`;
   CB.forEach((r,i)=>{
     const st=detail[r.name]; const aw=awards[r.name];
@@ -983,6 +990,7 @@ function renderCelebrate(){
     </div>`;
   });
   html+=`</div>`;
+  html+=`<div class="cel-outro">Thank you all for an unforgettable tournament — great picks, great banter, and not a single sore loser in the bunch. 🤝 That's the good stuff. Rest up, enjoy the summer… and start scouting for <b>2030</b>. ⚽🎉</div>`;
   wrap.innerHTML=html;
 }
 
